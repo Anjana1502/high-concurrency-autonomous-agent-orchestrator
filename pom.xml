@@ -16,6 +16,8 @@
 
 	<properties>
 		<java.version>21</java.version>
+		<!-- StructuredTaskScope is a preview API in Java 21 (JEP 453). -->
+		<maven.compiler.enablePreview>true</maven.compiler.enablePreview>
 		<grpc.version>1.83.1</grpc.version>
 		<protobuf.version>4.35.0</protobuf.version>
 		<resilience4j.version>2.3.0</resilience4j.version>
@@ -166,10 +168,23 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<jvmArguments>--enable-preview</jvmArguments>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<argLine>--enable-preview</argLine>
+				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<enablePreview>true</enablePreview>
+				</configuration>
 				<executions>
 					<execution>
 						<id>default-compile</id>

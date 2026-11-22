@@ -1,6 +1,7 @@
 package com.zaalima.high_concurrency_agent_orchestrator;
 
 import com.zaalima.high_concurrency_agent_orchestrator.dashboard.VirtualThreadMonitor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -17,9 +18,21 @@ import java.util.concurrent.TimeoutException;
 @Configuration
 public class VirtualThreadConfig {
 
+    /**
+     * Creates the task executor for the current benchmark mode.
+     * {@code virtual} uses Java 21 virtual threads; {@code platform} uses a
+     * fixed pool and provides the legacy baseline for the Week 4 comparison.
+     */
     @Bean(destroyMethod = "close")
-    public ExecutorService virtualThreadExecutor(VirtualThreadMonitor monitor) {
-        ExecutorService delegate = Executors.newVirtualThreadPerTaskExecutor();
+    public ExecutorService virtualThreadExecutor(
+            VirtualThreadMonitor monitor,
+            @Value("${orchestrator.executor.mode:virtual}") String mode,
+            @Value("${orchestrator.executor.platform-threads:200}") int platformThreads) {
+
+        ExecutorService delegate = "platform".equalsIgnoreCase(mode)
+                ? Executors.newFixedThreadPool(Math.max(1, platformThreads))
+                : Executors.newVirtualThreadPerTaskExecutor();
+
         return new CountingExecutorService(delegate, monitor);
     }
 

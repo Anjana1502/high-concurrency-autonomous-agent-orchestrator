@@ -3,10 +3,13 @@ package com.zaalima.high_concurrency_agent_orchestrator.service;
 import com.zaalima.high_concurrency_agent_orchestrator.AgentTask;
 import com.zaalima.high_concurrency_agent_orchestrator.AgentTaskService;
 import com.zaalima.high_concurrency_agent_orchestrator.agent.AgentRegistry;
+import com.zaalima.high_concurrency_agent_orchestrator.cluster.NodeLoadBalancer;
 import com.zaalima.high_concurrency_agent_orchestrator.controller.AgentRegistrationController.AgentNotRegisteredException;
 import com.zaalima.high_concurrency_agent_orchestrator.dto.AgentPayloadResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
@@ -19,10 +22,21 @@ public class AgentPayloadService {
 
     private final AgentRegistry registry;
     private final AgentTaskService taskService;
+    private final ObjectProvider<NodeLoadBalancer> loadBalancer;
 
-    public AgentPayloadService(AgentRegistry registry, AgentTaskService taskService) {
+    @Autowired
+    public AgentPayloadService(
+            AgentRegistry registry,
+            AgentTaskService taskService,
+            ObjectProvider<NodeLoadBalancer> loadBalancer) {
         this.registry = registry;
         this.taskService = taskService;
+        this.loadBalancer = loadBalancer;
+    }
+
+    /** Kept for unit tests that run without the Redis cluster profile. */
+    public AgentPayloadService(AgentRegistry registry, AgentTaskService taskService) {
+        this(registry, taskService, null);
     }
 
     public AgentPayloadResponse submit(
@@ -35,6 +49,10 @@ public class AgentPayloadService {
         }
 
         String enrichedTaskName = enrich(taskName, payload);
+        NodeLoadBalancer balancer = loadBalancer == null ? null : loadBalancer.getIfAvailable();
+        if (balancer != null) {
+            enrichedTaskName = balancer.withRoute(enrichedTaskName);
+        }
         AgentTask task = taskService.submitTask(enrichedTaskName);
 
         logger.info(

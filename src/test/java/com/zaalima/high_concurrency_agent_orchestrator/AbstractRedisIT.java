@@ -4,8 +4,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 @SpringBootTest
+@Testcontainers(disabledWithoutDocker = true)
 public abstract class AbstractRedisIT {
 
     static final GenericContainer<?> REDIS =
@@ -19,5 +21,6 @@ public abstract class AbstractRedisIT {
     static void redisProps(DynamicPropertyRegistry r) {
         r.add("spring.data.redis.host", REDIS::getHost);
         r.add("spring.data.redis.port", () -> REDIS.getMappedPort(6379));
+        r.add("orchestrator.registry.mode", () -> "redis");
     }
 }

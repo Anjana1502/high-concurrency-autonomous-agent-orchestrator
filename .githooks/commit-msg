@@ -24,5 +24,11 @@ if ! printf '%s\n' "$COMMIT_MSG" | grep -Eq "$PATTERN"; then
     exit 1
 fi
 
+if ! grep -Eq '^Signed-off-by: .+ <.+@.+>' "$COMMIT_MSG_FILE"; then
+    echo "ERROR: Commits must be signed off (git commit -s)."
+    echo "Add a line: Signed-off-by: Name <email@example.com>"
+    exit 1
+fi
+
 echo "Commit message validation passed."
 exit 0

@@ -51,7 +51,9 @@ one commit per day across the 20-day plan and covered by automated tests.
 
 ## Known limitations / future work
 
-- Cluster node entries are never garbage-collected (stale, not removed).
+- Cluster node entries are now pruned by Member 1's
+  `RedisNodeRegistry.pruneStaleNodes()`; the dashboard still relies on heartbeat
+  freshness rather than an explicit eviction event.
 - Dashboard polls every 1s; SSE stream exists but the table uses the snapshot
   endpoint for simplicity.
 - Token auth is a shared secret; production would use mTLS or OAuth.
